@@ -247,7 +247,9 @@ public class Java2DGraphicsState {
     public boolean updateClip(Shape cl) {
         if (getGraph().getClip() != null) {
             Area newClip = new Area(getGraph().getClip());
-            newClip.intersect(new Area(cl));
+            if (cl != null) {
+                newClip.intersect(new Area(cl));
+            }
             getGraph().setClip(new GeneralPath(newClip));
         } else {
             getGraph().setClip(cl);

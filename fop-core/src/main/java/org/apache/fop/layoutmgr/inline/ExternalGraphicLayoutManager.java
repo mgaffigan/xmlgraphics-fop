@@ -42,7 +42,7 @@ public class ExternalGraphicLayoutManager extends AbstractGraphicsLayoutManager 
 
     /** {@inheritDoc} */
     protected Area getChildArea() {
-        Image im = new Image(((ExternalGraphic) fobj).getSrc());
+        Image im = new Image(((ExternalGraphic) fobj).getSrc(), ((ExternalGraphic) fobj).getScalingMethod() == EN_INTEGER_PIXELS);
         im.setChangeBarList(getChangeBarList());
         return im;
     }

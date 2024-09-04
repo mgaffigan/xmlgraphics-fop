@@ -20,6 +20,8 @@
 package org.apache.fop.area.inline;
 
 import org.apache.fop.area.Area;
+import org.apache.fop.render.ImageHandlerUtil;
+import org.apache.xmlgraphics.util.QName;
 
 /**
  * Image area for external-graphic.
@@ -31,6 +33,7 @@ public class Image extends Area {
     private static final long serialVersionUID = 4800834714349695386L;
 
     private String url;
+    private boolean isIntegerPixel;
 
     /**
      * Create a new image with the given url.
@@ -41,6 +44,15 @@ public class Image extends Area {
         this.url = url;
     }
 
+    public Image(String url, boolean integerPixel) {
+        this(url);
+        this.isIntegerPixel = integerPixel;
+    
+        if (isIntegerPixel) {
+            this.setForeignAttribute(ImageHandlerUtil.INTEGER_PIXEL, "true");
+        }
+    }    
+
     /**
      * Get the url of this image.
      * This url is used as a key to locate the actual image data.
@@ -49,6 +61,10 @@ public class Image extends Area {
      */
     public String getURL() {
         return this.url;
+    }
+
+    public boolean getIsIntegerPixel() {
+        return this.isIntegerPixel;
     }
 }
 
