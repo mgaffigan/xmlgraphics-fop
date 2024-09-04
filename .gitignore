@@ -10,3 +10,6 @@ build/
 *.bak
 .idea
 *.iml
+
+fop-core/bin/
+fop/lib/*.jar
