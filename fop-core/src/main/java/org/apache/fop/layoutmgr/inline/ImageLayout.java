@@ -21,6 +21,7 @@ package org.apache.fop.layoutmgr.inline;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.awt.geom.Dimension2D;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,6 +30,7 @@ import org.apache.fop.datatypes.Length;
 import org.apache.fop.datatypes.PercentBaseContext;
 import org.apache.fop.fo.Constants;
 import org.apache.fop.fo.GraphicsProperties;
+import org.apache.fop.fo.flow.ExternalGraphic;
 import org.apache.fop.fo.properties.LengthRangeProperty;
 
 /**
@@ -72,6 +74,15 @@ public class ImageLayout implements Constants {
 
         int bpd = -1;
         int ipd = -1;
+
+        boolean isIntegerPixel = false;
+        float mptPerTargetPixel = -1;
+        ExternalGraphic agThis = null;
+        if (this.props instanceof ExternalGraphic) {
+            agThis = (ExternalGraphic) this.props;
+            isIntegerPixel = agThis.getScalingMethod() == EN_INTEGER_PIXELS;
+            mptPerTargetPixel = 72000 / agThis.getUserAgent().getTargetResolution();
+        }
 
         len = props.getBlockProgressionDimension().getOptimum(percentBaseContext).getLength();
         if (len.getEnum() != EN_AUTO) {
@@ -160,6 +171,17 @@ public class ImageLayout implements Constants {
         cwidth = adjustedDim.width;
         cheight = adjustedDim.height;
 
+        // fix up for Integer-pixels
+        if (isIntegerPixel) {
+            Dimension pixelScale = getIntegerScaleFactor(mptPerTargetPixel, agThis, cwidth, cheight);
+
+            cwidth = pixelScale.width;
+            cheight = pixelScale.height;
+
+            ipd = cwidth;
+            bpd = cheight;
+        }
+
         //Adjust viewport if not explicit
         if (ipd == -1) {
             ipd = constrainExtent(cwidth,
@@ -189,6 +211,44 @@ public class ImageLayout implements Constants {
         this.viewportSize.setSize(ipd, bpd);
         this.placement = new Rectangle(xoffset, yoffset, cwidth, cheight);
     }
+
+    private static Dimension getIntegerScaleFactor(float mptPerTargetPixel, ExternalGraphic agThis, int cwidth, int cheight) {
+        float previousVariance = Float.POSITIVE_INFINITY;
+        Dimension previousDimension = null;
+    
+        if ((cwidth == 0 && cheight == 0)
+            || (agThis.getPixelWidth() == 0 && agThis.getPixelHeight() == 0)) {
+            // this can happen when an image is not found
+            return new Dimension(0, 0);
+        }
+    
+        // this is a naïve alogrithm, but it is just math and shouldn't be too
+        // slow
+        for (int scaleFactor = 1; scaleFactor < 200; scaleFactor++) {
+            float dimX = mptPerTargetPixel * scaleFactor * agThis.getPixelWidth();
+            float dimY = mptPerTargetPixel * scaleFactor * agThis.getPixelHeight();
+            float varX = cwidth - dimX;
+            float varY = cheight - dimY;
+            // variance is the difference between the size of the image if we 
+            // show it in the target dpi using the specified scale factor
+            // (we don't need to abs-value this because we are squaring it)
+            float thisVariance = (float) Math.sqrt(varX * varX + varY * varY);
+    
+            // as soon as the variance stops decreasing, we stop looking
+            // (this is an optimizer)
+            if (thisVariance > previousVariance) {
+                // scaleFactor will never be null because on the first run around
+                // previousVariance is set to POSINF
+                return previousDimension;
+            }
+    
+            previousVariance = thisVariance;
+            previousDimension = new Dimension((int) dimX, (int) dimY);
+        }
+    
+        // this should not be possible.  Any number is smaller than posinf
+        throw new RuntimeException("Could not find matching scale factor");
+    }    
 
     private int constrainExtent(int extent, LengthRangeProperty range, Length contextExtent) {
         boolean mayScaleUp = (contextExtent.getEnum() != EN_SCALE_DOWN_TO_FIT);

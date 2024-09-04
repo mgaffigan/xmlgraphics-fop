@@ -37,6 +37,10 @@ public final class ImageHandlerUtil {
     public static final QName CONVERSION_MODE = new QName(
             ExtensionElementMapping.URI, null, "conversion-mode");
 
+    public static final QName INTEGER_PIXEL = new QName(
+        ExtensionElementMapping.URI, ExtensionElementMapping.STANDARD_PREFIX,
+        "integer-pixel");
+
     /** Conversion mode: indicates that the image shall be converted to a bitmap. */
     public static final String CONVERSION_MODE_BITMAP = "bitmap";
 

@@ -55,6 +55,8 @@ public class ExternalGraphic extends AbstractGraphics {
     private String url;
     private int intrinsicWidth;
     private int intrinsicHeight;
+    private int pixelWidth;
+    private int pixelHeight;
     private Length intrinsicAlignmentAdjust;
 
     /**
@@ -95,6 +97,8 @@ public class ExternalGraphic extends AbstractGraphics {
         if (info != null) {
             this.intrinsicWidth = info.getSize().getWidthMpt();
             this.intrinsicHeight = info.getSize().getHeightMpt();
+            this.pixelWidth = info.getSize().getWidthPx();
+            this.pixelHeight = info.getSize().getHeightPx();
             int baseline = info.getSize().getBaselinePositionFromBottom();
             if (baseline != 0) {
                 this.intrinsicAlignmentAdjust
@@ -151,6 +155,14 @@ public class ExternalGraphic extends AbstractGraphics {
     /** {@inheritDoc} */
     public int getIntrinsicHeight() {
         return this.intrinsicHeight;
+    }
+
+    public int getPixelWidth() {
+        return this.pixelWidth;
+    }
+    
+    public int getPixelHeight() {
+        return this.pixelHeight;
     }
 
     /** {@inheritDoc} */

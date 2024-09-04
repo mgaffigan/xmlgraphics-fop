@@ -21,6 +21,7 @@ package org.apache.fop.render.java2d;
 
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -34,6 +35,7 @@ import org.apache.xmlgraphics.image.loader.ImageInfo;
 import org.apache.xmlgraphics.image.loader.impl.ImageRendered;
 
 import org.apache.fop.render.ImageHandler;
+import org.apache.fop.render.ImageHandlerUtil;
 import org.apache.fop.render.RenderingContext;
 
 /**
@@ -69,19 +71,36 @@ public class Java2DImageHandlerRenderedImage implements ImageHandler {
         Graphics2D g2d = java2dContext.getGraphics2D();
 
         AffineTransform at = new AffineTransform();
-        at.translate(pos.x, pos.y);
-        //scaling based on layout instructions
-        double sx = pos.getWidth() / (double)info.getSize().getWidthMpt();
-        double sy = pos.getHeight() / (double)info.getSize().getHeightMpt();
+        if (context.getHint(ImageHandlerUtil.INTEGER_PIXEL) != null) {
+            // wrap to the nearest pixel
+            double x = pos.x, y = pos.y;
+            double pixelBoundary = 72000 / java2dContext.getUserAgent().getTargetResolution();
+            x = x - (x % pixelBoundary);
+            y = y - (y % pixelBoundary);
+            at.translate(x, y);
+        } else {
+            at.translate(pos.x, pos.y);
+        }
+        
+        double sx = pos.getWidth() / (double)info.getSize().getWidthPx();
+        double sy = pos.getHeight() / (double)info.getSize().getHeightPx();
+        
+        // we need to translate from {source pixels}, {target dimension mpt} 
+        // to {scale from source pixels to mpt}
+        // ex: 72k mpt / 72 pixels => 1k scale
 
         //scaling because of image resolution
         //float sourceResolution = java2dContext.getUserAgent().getSourceResolution();
         //source resolution seems to be a bad idea, not sure why
-        float sourceResolution = GraphicsConstants.DEFAULT_DPI;
-        sourceResolution *= 1000; //we're working in the millipoint area
-        sx *= sourceResolution / info.getSize().getDpiHorizontal();
-        sy *= sourceResolution / info.getSize().getDpiVertical();
         at.scale(sx, sy);
+
+        // add rendering hints for scaling
+        Object oldInterpolation = g2d.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
+        if (context.getHint(ImageHandlerUtil.INTEGER_PIXEL) != null) {
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
+                    RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        }
+
         RenderedImage rend = imageRend.getRenderedImage();
         if (imageRend.getTransparentColor() != null && !rend.getColorModel().hasAlpha()) {
             int transCol = imageRend.getTransparentColor().getRGB();
@@ -101,6 +120,13 @@ public class Java2DImageHandlerRenderedImage implements ImageHandler {
             g2d.drawRenderedImage(bufImage, at);
         } else {
             g2d.drawRenderedImage(rend, at);
+        }
+
+        // revert rendering hints
+        if (oldInterpolation != null) {
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, oldInterpolation);
+        } else {
+            g2d.getRenderingHints().remove(RenderingHints.KEY_INTERPOLATION);
         }
     }
 

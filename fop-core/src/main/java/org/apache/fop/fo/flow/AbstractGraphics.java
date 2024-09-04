@@ -67,6 +67,7 @@ public abstract class AbstractGraphics extends FObj
     private SpaceProperty lineHeight;
     private int overflow;
     private int scaling;
+    private int scalingMethod;
     private int textAlign;
     private Length width;
     private String altText;
@@ -110,6 +111,7 @@ public abstract class AbstractGraphics extends FObj
         lineHeight = pList.get(PR_LINE_HEIGHT).getSpace();
         overflow = pList.get(PR_OVERFLOW).getEnum();
         scaling = pList.get(PR_SCALING).getEnum();
+        scalingMethod = pList.get(PR_SCALING_METHOD).getEnum();
         textAlign = pList.get(PR_TEXT_ALIGN).getEnum();
         width = pList.get(PR_WIDTH).getLength();
         if (getUserAgent().isAccessibilityEnabled()) {
@@ -168,6 +170,11 @@ public abstract class AbstractGraphics extends FObj
     /** @return the "scaling" property */
     public int getScaling() {
         return scaling;
+    }
+
+    /** @return the "scaling-method" property */
+    public int getScalingMethod() {
+        return scalingMethod;
     }
 
     /** @return the "overflow" property */
