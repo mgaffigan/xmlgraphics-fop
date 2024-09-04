@@ -80,7 +80,11 @@ public class BitmapRendererConfigurator extends Java2DRendererConfigurator {
         if (config.isRenderHighQuality() != null) {
             settings.setQualityRendering(config.isRenderHighQuality());
         }
-        if (config.getColorMode() != null) {
+        
+        if (userAgent.getIsColorModeOverridden()) {
+            settings.setBufferedImageType(userAgent.getColorModeOverride());
+        }
+        else if (config.getColorMode() != null) {
             settings.setBufferedImageType(config.getColorMode());
         }
     }

@@ -109,6 +109,7 @@ public class FOUserAgent {
     private StructureTreeEventHandler structureTreeEventHandler
             = DummyStructureTreeEventHandler.INSTANCE;
     private boolean pdfUAEnabled;
+    private int colorModeOverride = -1;
 
     /** Producer:  Metadata element for the system/software that produces
      * the document. (Some renderers can store this in the document.)
@@ -741,6 +742,18 @@ public class FOUserAgent {
      */
     public StructureTreeEventHandler getStructureTreeEventHandler() {
         return this.structureTreeEventHandler;
+    }
+
+    public void setColorModeOverride(int type) {
+        this.colorModeOverride = type;
+    }
+    
+    public boolean getIsColorModeOverridden() {
+        return this.colorModeOverride != -1;
+    }
+    
+    public int getColorModeOverride() {
+        return this.colorModeOverride;
     }
 
     /** @see FopFactory#getLayoutManagerMakerOverride() */
