@@ -27,6 +27,7 @@ import org.xml.sax.Locator;
 import org.apache.xmlgraphics.image.loader.ImageException;
 import org.apache.xmlgraphics.image.loader.ImageInfo;
 import org.apache.xmlgraphics.image.loader.ImageManager;
+import org.apache.xmlgraphics.util.QName;
 
 import org.apache.fop.ResourceEventProducer;
 import org.apache.fop.apps.FOPException;
@@ -36,6 +37,7 @@ import org.apache.fop.datatypes.URISpecification;
 import org.apache.fop.fo.FONode;
 import org.apache.fop.fo.PropertyList;
 import org.apache.fop.fo.ValidationException;
+import org.apache.fop.fo.extensions.ExtensionElementMapping;
 import org.apache.fop.fo.properties.FixedLength;
 
 /**
@@ -45,6 +47,12 @@ import org.apache.fop.fo.properties.FixedLength;
  * inline area that can be added to the area tree.
  */
 public class ExternalGraphic extends AbstractGraphics {
+
+    private static final QName MAX_INTEGER_SCALE = new QName(
+            ExtensionElementMapping.URI, ExtensionElementMapping.STANDARD_PREFIX,
+            "max-integer-scale");
+
+    private static final int DEFAULT_MAX_INTEGER_SCALE = 10;
 
     // The value of properties relevant for fo:external-graphic.
     // All but one of the e-g properties are kept in AbstractGraphics
@@ -57,6 +65,7 @@ public class ExternalGraphic extends AbstractGraphics {
     private int intrinsicHeight;
     private int pixelWidth;
     private int pixelHeight;
+    private int maxIntegerScale = DEFAULT_MAX_INTEGER_SCALE;
     private Length intrinsicAlignmentAdjust;
 
     /**
@@ -73,6 +82,20 @@ public class ExternalGraphic extends AbstractGraphics {
     public void bind(PropertyList pList) throws FOPException {
         super.bind(pList);
         src = pList.get(PR_SRC).getString();
+
+        String maxScale = (String) getForeignAttributes().get(MAX_INTEGER_SCALE);
+        if (maxScale != null) {
+            try {
+                int value = Integer.parseInt(maxScale.trim());
+                if (value < 1) {
+                    invalidPropertyValueError(MAX_INTEGER_SCALE.getQName(), maxScale, null);
+                } else {
+                    maxIntegerScale = value;
+                }
+            } catch (NumberFormatException nfe) {
+                invalidPropertyValueError(MAX_INTEGER_SCALE.getQName(), maxScale, nfe);
+            }
+        }
 
         //Additional processing: obtain the image's intrinsic size and baseline information
         url = URISpecification.getURL(src);
@@ -163,6 +186,11 @@ public class ExternalGraphic extends AbstractGraphics {
     
     public int getPixelHeight() {
         return this.pixelHeight;
+    }
+
+    /** @return the largest whole-number scale allowed for scaling-method="integer-pixels" */
+    public int getMaxIntegerScale() {
+        return this.maxIntegerScale;
     }
 
     /** {@inheritDoc} */

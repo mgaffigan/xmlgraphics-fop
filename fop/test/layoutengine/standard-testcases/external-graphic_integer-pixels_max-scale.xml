@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!-- $Id$ -->
+<testcase>
+  <info>
+    <p>
+      This test checks that scaling-method="integer-pixels" is limited by fox:max-integer-scale.
+    </p>
+  </info>
+  <fo>
+    <fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:fox="http://xmlgraphics.apache.org/fop/extensions">
+      <fo:layout-master-set>
+        <fo:simple-page-master master-name="normal" page-width="5in" page-height="5in">
+          <fo:region-body/>
+        </fo:simple-page-master>
+      </fo:layout-master-set>
+      <fo:page-sequence master-reference="normal">
+        <fo:flow flow-name="xsl-region-body">
+          <fo:block>
+            <fo:external-graphic src="../resources/images/list-item.png"
+              inline-progression-dimension="4in"
+              content-width="scale-to-fit"
+              scaling-method="integer-pixels" id="default"/>
+          </fo:block>
+          <fo:block>
+            <fo:external-graphic src="../resources/images/list-item.png"
+              inline-progression-dimension="4in"
+              content-width="scale-to-fit"
+              scaling-method="integer-pixels" fox:max-integer-scale="20" id="override"/>
+          </fo:block>
+          <fo:block>
+            <fo:external-graphic src="../resources/images/list-item.png"
+              inline-progression-dimension="1in"
+              content-width="scale-to-fit"
+              scaling-method="integer-pixels" id="small"/>
+          </fo:block>
+          <fo:block>EOF</fo:block>
+        </fo:flow>
+      </fo:page-sequence>
+    </fo:root>
+  </fo>
+  <checks>
+    <!-- 16x would fit, but the default limit is 10x -->
+    <eval expected="180000" xpath="//viewport[@prod-id='default']/@ipd"/>
+    <eval expected="90000" xpath="//viewport[@prod-id='default']/@bpd"/>
+    <eval expected="0 0 180000 90000" xpath="//viewport[@prod-id='default']/@pos"/>
+
+    <!-- a higher limit allows 16x -->
+    <eval expected="288000" xpath="//viewport[@prod-id='override']/@ipd"/>
+    <eval expected="144000" xpath="//viewport[@prod-id='override']/@bpd"/>
+    <eval expected="0 0 288000 144000" xpath="//viewport[@prod-id='override']/@pos"/>
+
+    <!-- below the limit nothing changes -->
+    <eval expected="72000" xpath="//viewport[@prod-id='small']/@ipd"/>
+    <eval expected="36000" xpath="//viewport[@prod-id='small']/@bpd"/>
+    <eval expected="0 0 72000 36000" xpath="//viewport[@prod-id='small']/@pos"/>
+  </checks>
+</testcase>
