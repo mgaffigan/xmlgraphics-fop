@@ -224,7 +224,7 @@ public class ImageLayout implements Constants {
     
         // this is a naïve alogrithm, but it is just math and shouldn't be too
         // slow
-        for (int scaleFactor = 1; scaleFactor < 200; scaleFactor++) {
+        for (int scaleFactor = 1; scaleFactor <= agThis.getMaxIntegerScale(); scaleFactor++) {
             float dimX = mptPerTargetPixel * scaleFactor * agThis.getPixelWidth();
             float dimY = mptPerTargetPixel * scaleFactor * agThis.getPixelHeight();
             float varX = cwidth - dimX;
@@ -246,8 +246,7 @@ public class ImageLayout implements Constants {
             previousDimension = new Dimension((int) dimX, (int) dimY);
         }
     
-        // this should not be possible.  Any number is smaller than posinf
-        throw new RuntimeException("Could not find matching scale factor");
+        return previousDimension;
     }    
 
     private int constrainExtent(int extent, LengthRangeProperty range, Length contextExtent) {
